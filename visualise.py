@@ -29,6 +29,12 @@ def get_parser() -> Namespace:
         help="model to visualise",
     )
     parser.add_argument(
+        "--use-hub",
+        action="store_true",
+        default=False,
+        help="use torch hub to load the model",
+    )
+    parser.add_argument(
         "--model-path",
         type=str,
         default=None,
@@ -39,7 +45,7 @@ def get_parser() -> Namespace:
         "--dataset",
         type=str,
         default="MNIST",
-        choices=["MNIST", "ImageNet-1K"],
+        choices=["MNIST", "ImageNet"],
         help="dataset that the model has been trained on",
     )
     parser.add_argument(
@@ -67,13 +73,12 @@ def get_parser() -> Namespace:
         metavar="N",
         help="number of iterations to run the optimisation",
     )
-    # TODO: Should probably check this
     parser.add_argument(
         "--channel-idx",
         type=int,
         default=0,
         metavar="N",
-        help="channel index to visualise",
+        help="channel index to visualise in the layer",
     )
     args = parser.parse_args()
 
@@ -90,22 +95,27 @@ def get_parser() -> Namespace:
 
     if args.model == "ConvNet" and args.dataset != "MNIST":
         raise ValueError("ConvNet only supports MNIST dataset")
-    if args.model == "ResNet" and args.dataset != "ImageNet-1K":
-        raise ValueError("ResNet only supports ImageNet-1K dataset")
+    if args.model == "ResNet" and args.dataset != "ImageNet":
+        raise ValueError("ResNet only supports ImageNet dataset")
 
-    if args.model_path is None:
+    if not args.use_hub and args.model_path is None:
         setattr(args, "model_path", f"checkpoints/{args.model.lower()}.pt")
     if args.channel_idx == -1:
-        setattr(args, "channel_idx", random.randint(0, 9))
-    
+        if args.dataset == "MNIST":
+            setattr(args, "channel_idx", random.randint(0, 9))  # MNIST classes
+        else:
+            setattr(args, "channel_idx", random.randint(0, 1000))  # ImageNet classes
+
     if device == torch.device("cuda"):
-        setattr(args, "iters", 4096)
-    
+        setattr(args, "iters", 2048)
+
     return args
 
 
 def plot_image(image: torch.Tensor, args: Namespace, layer: str) -> None:
-    print(f"Visualising Model {args.model} | Layer {layer} | Channel {args.channel_idx}")
+    print(
+        f"Visualising Model {args.model} | Layer {layer} | Channel {args.channel_idx}"
+    )
 
     img = image.detach().cpu().squeeze(dim=0).permute(1, 2, 0)
     img = torch.clamp(img, 0, 1)
@@ -116,21 +126,35 @@ def plot_image(image: torch.Tensor, args: Namespace, layer: str) -> None:
     if not os.path.exists(args.vis_dir):
         os.makedirs(args.vis_dir)
 
-    plt.savefig(f"{args.vis_dir}/vis_{layer}_{args.channel_idx}_{datetime.now().strftime("%d%m%Y_%H%M%S") }.png")
+    plt.savefig(
+        f"{args.vis_dir}/vis_{layer}_{args.channel_idx}_{datetime.now().strftime("%d%m%Y_%H%M%S") }.png"
+    )
 
 
 def get_model(args: Namespace) -> torch.nn.Module:
     model = None
-    match args.model:
-        case "ConvNet":
-            from models.convnet import ConvNet
-            model = ConvNet()
-        case "ResNet":
-            raise NotImplementedError("ResNet not implemented yet")
-        case _:
-            raise ValueError(f"Model {args.model} not implemented")
 
-    model.load_state_dict(torch.load(args.model_path))
+    if args.use_hub:
+        match args.model:
+            case "ConvNet":
+                raise ValueError("ConvNet not available in Torch Hub")
+            case "ResNet":
+                model = torch.hub.load(
+                    "pytorch/vision:v0.10.0", "resnet18", pretrained=True
+                )
+    
+    elif args.model_path:
+        match args.model:
+            case "ConvNet":
+                from models.convnet import ConvNet
+
+                model = ConvNet()
+            case "ResNet":
+                raise NotImplementedError("Please use Torch Hub to load ResNet")
+            case _:
+                raise ValueError(f"Model {args.model} not implemented")
+
+        model.load_state_dict(torch.load(args.model_path))
 
     for param in model.parameters():
         param.requires_grad_(False)
@@ -205,7 +229,9 @@ def get_layer(model: torch.nn.Module) -> str:
     print("Printing Model Summary")
     stats = summary(model)
     layers = list(map(lambda x: x[0], model.named_modules()))
-    print("\nAvailable Layers. To visualise, please use layers which have trainable params > 0 to get meaningful results: ")
+    print(
+        "\nAvailable Layers. To visualise, please use layers which have trainable params > 0 to get meaningful results: "
+    )
     for idx, layer_info in enumerate(stats.summary_list):
         if idx == 0:
             continue
