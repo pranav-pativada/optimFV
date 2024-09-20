@@ -1,7 +1,7 @@
 import torch
 from tqdm import tqdm
 from typing import Tuple
-from types_ import Tensor, DataLoader, Device, Loss, Net, Optimiser
+from mytypes import Tensor, DataLoader, Device, Loss, Net, Optimiser
 
 
 class Trainer:
@@ -18,7 +18,6 @@ class Trainer:
         train_loader: DataLoader,
         test_loader: DataLoader,
         log_interval: int = 100,
-        save_interval: int = 10,
     ):
         self.model = model
         self.loss_fn = loss_fn
@@ -26,9 +25,6 @@ class Trainer:
         self.device = device
         self.train_loader = train_loader
         self.test_loader = test_loader
-
-        self.log_interval = log_interval
-        self.save_interval = save_interval
 
         self.log_interval = log_interval
         self.accuracies = []

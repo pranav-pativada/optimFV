@@ -25,7 +25,7 @@ def get_parser() -> Namespace:
         "--model",
         type=str,
         default="ConvNet",
-        choices=["ConvNet", "ResNet"],
+        choices=["ConvNet", "Basic3C3D", "ResNet"],
         help="model to visualise",
     )
     parser.add_argument(
@@ -142,7 +142,7 @@ def get_model(args: Namespace) -> torch.nn.Module:
                 model = torch.hub.load(
                     "pytorch/vision:v0.10.0", "resnet18", pretrained=True
                 )
-    
+
     elif args.model_path:
         match args.model:
             case "ConvNet":
@@ -172,7 +172,6 @@ def get_layer_hook(layer_name: str) -> Callable:
 
 def loss_func(layer: str, channel_idx: int) -> Callable:
     def loss() -> torch.Tensor:
-        # TODO: Check this
         return -activations[layer][0, channel_idx].mean()
 
     return loss

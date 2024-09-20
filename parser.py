@@ -2,7 +2,7 @@ import argparse
 import os
 import sys
 import yaml
-from types_ import Args
+from mytypes import Args
 
 
 class Parser:
@@ -102,7 +102,7 @@ class Parser:
         parser.add_argument(
             "--outputdir",
             type=str,
-            default="./experiments",
+            default=None,
             help="output directory",
         )
         parser.add_argument(
@@ -136,7 +136,7 @@ class Parser:
         if (
             args.config
             and len(sys.argv) == 3
-            and sys.argv[1] == "-config"
+            and sys.argv[1] == "--config"
             and sys.argv[2].endswith(".yaml")
         ):
             data = None
@@ -162,10 +162,10 @@ class Parser:
             raise ValueError("ConvNet not supported for CIFAR10 and CIFAR100")
 
         if not args.datadir:
-            args.datadir = os.path.join("./data", args.dataset)
+            args.datadir = "./data"
 
         if not args.outputdir:
-            args.outputdir = os.path.join("experiments", args.dataset)
+            args.outputdir = os.path.join("experiments", args.dataset, args.optimiser)
         if not os.path.exists(args.outputdir):
             os.makedirs(args.outputdir)
 

@@ -1,6 +1,6 @@
 import torch
 from torchvision import datasets, transforms
-from types_ import Args, Device, DataLoader, Net, Optimiser
+from mytypes import Args, Device, DataLoader, Net, Optimiser
 from typing import Tuple, Dict
 from models import ConvNet, Basic3C3D
 from optimisers import CurveBall
@@ -19,6 +19,7 @@ def get_model_and_data(
         model = torch.nn.DataParallel(model)
 
     return (model, train_loader, test_loader)
+
 
 def get_optimiser(args: Args, net: Net) -> Optimiser:
     match args.optimiser:
@@ -45,6 +46,7 @@ def get_optimiser(args: Args, net: Net) -> Optimiser:
             )
         case _:
             raise ValueError(f"Unknown optimiser: {args.optimiser}")
+
 
 def get_cifar(args: Args, use_cuda: bool) -> Tuple[DataLoader, DataLoader]:
     train_kwargs, test_kwargs = get_train_test_args(args, use_cuda)
