@@ -1,0 +1,8 @@
+model: Basic3C3D
+dataset: CIFAR10
+optimiser: SGD
+epochs: 10
+batch-size: 64
+test-batch-size: 64
+lr: 0.01
+momentum: 0.9

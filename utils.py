@@ -1,8 +1,9 @@
 import torch
 from torchvision import datasets, transforms
-from types_ import Args, Device, DataLoader, Net
+from types_ import Args, Device, DataLoader, Net, Optimiser
 from typing import Tuple, Dict
 from models import ConvNet, Basic3C3D
+from optimisers import CurveBall
 
 
 def get_model_and_data(
@@ -19,6 +20,31 @@ def get_model_and_data(
 
     return (model, train_loader, test_loader)
 
+def get_optimiser(args: Args, net: Net) -> Optimiser:
+    match args.optimiser:
+        case "Adam":
+            args.lr = 0.001 if args.lr < 0 else args.lr
+            return torch.optim.Adam(net.parameters(), lr=args.lr)
+        case "SGD":
+            args.lr = 0.01 if args.lr < 0 else args.lr
+            args.momentum = 0.9 if args.momentum < 0 else args.momentum
+            return torch.optim.SGD(net.parameters(), lr=args.lr, momentum=args.momentum)
+        case "L-BFGS":
+            args.lr = 1 if args.lr < 0 else args.lr
+            return torch.optim.LBFGS(net.parameters(), lr=args.lr)
+        case "CurveBall":
+            args.lr = 0.01 if args.lr < 0 else args.lr
+            args.momentum = 0.9 if args.momentum < 0 else args.momentum
+            lambd = 1.0 if args.lambd < 0 else args.lambd
+            return CurveBall(
+                net.parameters(),
+                lr=args.lr,
+                momentum=args.momentum,
+                lambd=lambd,
+                auto_lambda=not args.auto_lambda,
+            )
+        case _:
+            raise ValueError(f"Unknown optimiser: {args.optimiser}")
 
 def get_cifar(args: Args, use_cuda: bool) -> Tuple[DataLoader, DataLoader]:
     train_kwargs, test_kwargs = get_train_test_args(args, use_cuda)

@@ -46,7 +46,7 @@ class Parser:
             "--test-batch-size",
             type=int,
             default=1000,
-            help="input batch size for testing (default: 1000 for MNIST, 128 for CIFAR10 and CIFAR100)",
+            help="input batch size for testing (default: 1000 for MNIST, 64 for CIFAR)",
         )
         parser.add_argument(
             "--epochs",
