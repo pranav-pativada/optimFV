@@ -7,6 +7,9 @@ vis/
 # Ruff files
 .ruff_cache/
 
+# MyPy cache
+.mypy_cache/
+
 # Python cache
 **/__pycache__/
 
