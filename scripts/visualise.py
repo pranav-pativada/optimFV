@@ -20,7 +20,7 @@ device: torch.device = None
 
 
 def get_parser() -> Namespace:
-    parser = argparse.ArgumentParser(description="Feature Visualisation")
+    parser = argparse.ArgumentParser(description="Activation Maximisation")
     parser.add_argument(
         "--model",
         type=str,

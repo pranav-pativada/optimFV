@@ -68,7 +68,7 @@ class Parser:
             metavar="M",
             help="momentum (default: 0.9 for SGD and CurveBall)",
         )
-        parser.add_argument("--lambda", type=float, default=1.0, help="lambda")
+        parser.add_argument("--lambd", type=float, default=1.0, help="lambda")
         parser.add_argument(
             "--no-auto-lambda",
             action="store_true",

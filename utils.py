@@ -31,7 +31,8 @@ def get_optimiser(args: Args, net: Net) -> Optimiser:
             args.momentum = 0.9 if args.momentum < 0 else args.momentum
             return torch.optim.SGD(net.parameters(), lr=args.lr, momentum=args.momentum)
         case "LBFGS":
-            return torch.optim.LBFGS(net.parameters())
+            args.lr = 1 if args.lr < 0 else args.lr
+            return torch.optim.LBFGS(net.parameters(), lr=args.lr)
         case "CurveBall":
             args.lr = 0.01 if args.lr < 0 else args.lr
             args.momentum = 0.9 if args.momentum < 0 else args.momentum
@@ -41,7 +42,7 @@ def get_optimiser(args: Args, net: Net) -> Optimiser:
                 lr=args.lr,
                 momentum=args.momentum,
                 lambd=lambd,
-                auto_lambda=not args.auto_lambda,
+                auto_lambda=not args.no_auto_lambda,
             )
         case _:
             raise ValueError(f"Unknown optimiser: {args.optimiser}")
