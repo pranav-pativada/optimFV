@@ -4,6 +4,9 @@ data/
 # Visualisations
 vis/
 
+# Experiments
+experiments/
+
 # Ruff files
 .ruff_cache/
 

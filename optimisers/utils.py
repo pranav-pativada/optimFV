@@ -15,7 +15,7 @@ def get_optimiser(args: Args, net: Net) -> Optimiser:
         case "L-BFGS":
             args.lr = 1 if args.lr < 0 else args.lr
             return torch.optim.LBFGS(net.parameters(), lr=args.lr)
-        case "Curveball":
+        case "CurveBall":
             args.lr = 0.01 if args.lr < 0 else args.lr
             args.momentum = 0.9 if args.momentum < 0 else args.momentum
             lambd = 1.0 if args.lambd < 0 else args.lambd

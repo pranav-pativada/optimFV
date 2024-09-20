@@ -1,6 +1,7 @@
 import torch
+from tqdm import tqdm
 from typing import Tuple
-from types_ import Tensor, Args, DataLoader, Device, Loss, Net, Optimiser
+from types_ import Tensor, DataLoader, Device, Loss, Net, Optimiser
 
 
 class Trainer:
@@ -29,12 +30,15 @@ class Trainer:
         self.log_interval = log_interval
         self.save_interval = save_interval
 
+        self.log_interval = log_interval
+        self.accuracies = []
+
     def train(self, epoch: int) -> None:
         """
         Train the model for one epoch
         """
         self.model.train()
-        for batch_idx, (data, target) in enumerate(self.train_loader):
+        for batch_idx, (data, target) in enumerate(tqdm(self.train_loader)):
             data = data.to(self.device)
             target = target.to(self.device)
 
@@ -49,7 +53,7 @@ class Trainer:
 
             if batch_idx % self.log_interval == 0:
                 print(
-                    "Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}\t Accuracy: {::6f}".format(
+                    "\nTrain Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}\t Accuracy: {:.6f}".format(
                         epoch,
                         batch_idx * len(data),
                         len(self.train_loader.dataset),
@@ -64,8 +68,9 @@ class Trainer:
         Test the model for one epoch
         """
         self.model.eval()
+        self.accuracies = []
         with torch.no_grad():
-            for batch_idx, (data, target) in self.test_loader:
+            for batch_idx, (data, target) in enumerate(tqdm(self.test_loader)):
                 data, target = data.to(self.device), target.to(self.device)
                 predictions = self.model(data)
 
@@ -74,19 +79,19 @@ class Trainer:
                     1
                 ]  # get the index of the max log-probability
                 accuracy = pred.eq(target.view_as(pred)).double().mean()
+                self.accuracies.append(accuracy)
 
                 # log the loss and accuracy
-                if batch_idx % self.log_interval == 0:
-                    print(
-                        "Test Epoch: {} [{}/{} ({:.0f}%)]\tVal Loss: {:.6f}\t Val Accuracy: {::6f}".format(
-                            epoch,
-                            batch_idx * len(data),
-                            len(self.test_loader.dataset),
-                            100.0 * batch_idx / len(self.test_loader),
-                            loss.item(),
-                            accuracy.item(),
-                        )
+                print(
+                    "\nTest Epoch: {} [{}/{} ({:.0f}%)]\tVal Loss: {:.6f}\t Val Accuracy: {:.6f}".format(
+                        epoch,
+                        batch_idx * len(data),
+                        len(self.test_loader.dataset),
+                        100.0 * batch_idx / len(self.test_loader),
+                        loss.item(),
+                        accuracy.item(),
                     )
+                )
 
     def optimise(self, model_fn, loss_fn) -> Tuple[Tensor, Tensor]:
         match self.optimiser.__class__.__name__:
@@ -111,3 +116,7 @@ class Trainer:
                 self.optimiser.step()
 
         return (loss, predictions)
+
+    @property
+    def accuracy(self) -> float:
+        return sum(self.accuracies) / len(self.accuracies)
