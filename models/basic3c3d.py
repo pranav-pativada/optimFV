@@ -1,7 +1,11 @@
 import torch.nn as nn
 from .flatten import Flatten
 
+
 class Basic3C3CD(nn.Module):
+    """
+    Basic 3C3D model for CIFAR Training
+    """
     def __init__(self):
         super(Basic3C3CD, self).__init__()
         self.layers = nn.Sequential(
@@ -22,4 +26,3 @@ class Basic3C3CD(nn.Module):
 
     def forward(self, x):
         return self.layers(x)
-

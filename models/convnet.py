@@ -1,7 +1,11 @@
 import torch.nn as nn
 from .flatten import Flatten
 
+
 class ConvNet(nn.Module):
+    """
+    Basic ConvNet model for MNIST Training
+    """
     def __init__(self):
         super(ConvNet, self).__init__()
         self.layers = nn.Sequential(

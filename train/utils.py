@@ -1,44 +1,38 @@
 import torch
+import sys
+import yaml
 from types_ import Args, DataLoader, Device
 from typing import Tuple
-from torchvision import datasets, transforms
 
 
-def get_mnist_dataset(args: Args) -> Tuple[DataLoader, DataLoader]:
-    train_kwargs = {"batch_size": args.batch_size}
-    test_kwargs = {"batch_size": args.test_batch_size}
-    use_cuda, _ = get_device(args)
+def parse_config(args: Args) -> Args:
+    if (
+        args.config
+        and len(sys.argv) == 3
+        and sys.argv[1] == "-config"
+        and sys.argv[2].endswith(".yaml")
+    ):
+        data = None
+        with open(args.config, "r") as file:
+            data = yaml.safe_load(file)
 
-    if use_cuda:
-        cuda_kwargs = {"num_workers": 1, "pin_memory": True, "shuffle": True}
-        train_kwargs.update(cuda_kwargs)
-        test_kwargs.update(cuda_kwargs)
+        for key, value in data.items():
+            key = key.replace("-", "_")  # Namespace representation converts - to _
+            if hasattr(args, key):
+                setattr(args, key, value)
+            else:
+                raise ValueError(f"Invalid entry {key} in yaml file")
 
-    transform = transforms.Compose(
-        [transforms.ToTensor(), transforms.Normalize((0.1307,), (0.3081,))]
-    )
-
-    train_loader = torch.utils.data.DataLoader(
-        datasets.MNIST(
-            args.datadir,
-            train=True,
-            download=True,
-            transform=transform,
-        ),
-        **train_kwargs,
-    )
-    test_loader = torch.utils.data.DataLoader(
-        datasets.MNIST(
-            args.datadir,
-            train=False,
-            transform=transform,
-        ),
-        **test_kwargs,
-    )
-    return (train_loader, test_loader)
+    elif args.config and len(sys.argv) > 3:
+        raise ValueError(
+            "Please specify either a valid config file OR the required arguments."
+        )
 
 
 def get_device(args: Args) -> Tuple[bool, Device]:
+    """
+    Get the device to use for training
+    """
     use_cuda = not args.no_cuda and torch.cuda.is_available()
     use_mps = not args.no_mps and torch.backends.mps.is_available()
 

@@ -1,6 +1,6 @@
 import torch
 from optimisers import CurveBall
-from types_ import *
+from types_ import Args, Net, Optimiser
 
 
 def get_optimiser(args: Args, net: Net) -> Optimiser:
