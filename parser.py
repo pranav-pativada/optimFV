@@ -31,9 +31,9 @@ class Parser:
         )
         parser.add_argument(
             "--optimiser",
-            choices=["SGD", "Adam", "L-BFGS", "CurveBall"],
+            choices=["SGD", "Adam", "LBFGS", "CurveBall"],
             default="Adam",
-            help="optimiser (SGD, Adam, L-BFGS, or CurveBall)",
+            help="optimiser (SGD, Adam, LBFGS, or CurveBall)",
         )
         parser.add_argument(
             "--batch-size",
@@ -59,7 +59,7 @@ class Parser:
             type=float,
             default=-1,
             metavar="LR",
-            help="learning rate (default: 0.01 for SGD, 0.001 for Adam, 1 for L-BFGS and CurveBall)",
+            help="learning rate (default: 0.01 for SGD, 0.001 for Adam, 1 for LBFGS and CurveBall)",
         )
         parser.add_argument(
             "--momentum",

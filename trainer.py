@@ -93,8 +93,8 @@ class Trainer:
         match self.optimiser.__class__.__name__:
             case "CurveBall":
                 (loss, predictions) = self.optimiser.step(model_fn, loss_fn)
-            case "L-BFGS":
-
+            case "LBFGS":
+                
                 def closure():
                     self.optimiser.zero_grad()
                     predictions = model_fn()
@@ -102,7 +102,8 @@ class Trainer:
                     loss.backward()
                     return loss
 
-                self.optimiser.step(closure)
+                loss = self.optimiser.step(closure)
+                predictions = model_fn()
             case _:
                 # Standard optimisers
                 self.optimiser.zero_grad()

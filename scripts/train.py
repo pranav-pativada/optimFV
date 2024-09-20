@@ -8,13 +8,12 @@ from utils import get_device, get_model_and_data, get_optimiser
 
 def main() -> None:
     args = Parser().args
-    breakpoint()
+
     torch.manual_seed(args.seed)
     use_cuda, device = get_device(args)
 
     model, train_loader, test_loader = get_model_and_data(args, use_cuda, device)
     optimiser = get_optimiser(args, model)
-    summary(model, input_size=(args.batch_size, 1, 28, 28))
     trainer = Trainer(
         model=model,
         loss_fn=F.cross_entropy,
@@ -25,13 +24,14 @@ def main() -> None:
         log_interval=args.log_interval,
     )
 
+    summary(model, input_size=(args.batch_size, 1, 28, 28))
     best_acc = 0.0
 
     for epoch in range(1, args.epochs + 1):
         trainer.train(epoch)
         trainer.test(epoch)
 
-        if epoch % args.save_interval == 0:
+        if args.save_model and epoch % args.save_interval == 0:
             print(f"Saving model at epoch {epoch}")
             state = {
                 "model": model.state_dict(),
