@@ -3,7 +3,7 @@ import torch.nn.functional as F
 from torchinfo import summary
 from parser import Parser
 from trainer import Trainer
-from utils import get_device, get_model_and_data, get_optimiser
+from utils import get_device, get_model, get_data, get_optimiser
 
 
 def main() -> None:
@@ -12,8 +12,9 @@ def main() -> None:
     torch.manual_seed(args.seed)
     use_cuda, device = get_device(args)
 
-    model, train_loader, test_loader = get_model_and_data(args, use_cuda, device)
-    optimiser = get_optimiser(args, model)
+    model = get_model(args, device)
+    train_loader, test_loader = get_data(args, use_cuda, device)
+    optimiser = get_optimiser(args, model.parameters())
     trainer = Trainer(
         model=model,
         loss_fn=F.cross_entropy,

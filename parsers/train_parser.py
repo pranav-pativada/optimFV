@@ -1,20 +1,14 @@
 import argparse
 import os
-import sys
-import yaml
+from .parser import Parser
 from mytypes import Args
 
-
-class Parser:
-    def __init__(self):
-        args_ = self._get()
-        self.parse_config(args_)
-        self.validate_args(args_)
-        self.args_ = args_
-
-    @staticmethod
-    def _get() -> Args:
-        parser = argparse.ArgumentParser(description="MNIST Training")
+class TrainParser(Parser):
+    def __init__self():
+        super().__init__()
+    
+    def _get(self) -> Args:
+        parser = argparse.ArgumentParser(description="Example training of small models")
         parser.add_argument(
             "--model",
             type=str,
@@ -131,31 +125,8 @@ class Parser:
 
         args = parser.parse_args()
         return args
-
-    def parse_config(self, args: Args):
-        if (
-            args.config
-            and len(sys.argv) == 3
-            and sys.argv[1] == "--config"
-            and sys.argv[2].endswith(".yaml")
-        ):
-            data = None
-            with open(args.config, "r") as file:
-                data = yaml.safe_load(file)
-
-            for key, value in data.items():
-                key = key.replace("-", "_")  # Namespace representation converts - to _
-                if hasattr(args, key):
-                    setattr(args, key, value)
-                else:
-                    raise ValueError(f"Invalid entry {key} in yaml file")
-
-        elif args.config and len(sys.argv) > 3:
-            raise ValueError(
-                "Please specify either a valid config file OR the required arguments."
-            )
-
-    def validate_args(self, args: Args):
+    
+    def _validate_args(self, args: Args) -> None:
         if args.dataset == "MNIST" and args.model == "Basic3C3D":
             raise ValueError("Basic3C3D is not supported for MNIST")
         if args.dataset != "MNIST" and args.model == "ConvNet":
@@ -168,7 +139,3 @@ class Parser:
             args.outputdir = os.path.join("experiments", args.dataset, args.optimiser)
         if not os.path.exists(args.outputdir):
             os.makedirs(args.outputdir)
-
-    @property
-    def args(self):
-        return self.args_

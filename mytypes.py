@@ -7,6 +7,7 @@ type Args = Namespace
 
 # Torch aliases
 type Tensor = torch.Tensor
+type Device = torch.device
 type Optimiser = torch.optim.Optimizer
 type Net = torch.nn.Module
 type Loss = typing.Callable[[Tensor, Tensor], Tensor]

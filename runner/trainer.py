@@ -6,7 +6,7 @@ from mytypes import Tensor, DataLoader, Device, Loss, Net, Optimiser
 
 class Trainer:
     """
-    Generic trainer class
+    Generic trainer class for MNIST, CIFAR10, CIFAR100
     """
 
     def __init__(

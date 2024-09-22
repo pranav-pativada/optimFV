@@ -1,44 +1,63 @@
 import torch
 from torchvision import datasets, transforms
-from mytypes import Args, Device, DataLoader, Net, Optimiser
-from typing import Tuple, Dict
+from mytypes import Args, Device, DataLoader, Net, Optimiser, Tensor
+from typing import Tuple, Dict, List
 from models import ConvNet, Basic3C3D
 from optimisers import CurveBall
 
 
-def get_model_and_data(
+def get_data(
     args: Args, use_cuda: bool, device: Device
 ) -> Tuple[Net, DataLoader, DataLoader]:
     if args.dataset == "MNIST":
         train_loader, test_loader = get_mnist(args, use_cuda)
-        model = ConvNet().to(device)
     else:
         train_loader, test_loader = get_cifar(args, use_cuda)
-        model = Basic3C3D().to(device)
-    if args.parallel:
+
+    return (train_loader, test_loader)
+
+
+def get_model(args: Args, device: Device) -> Net:
+    match args.model: 
+        case "ConvNet":
+            model =  ConvNet()
+        case "Basic3C3D":
+            model =  Basic3C3D()
+        case "ResNet":
+            model = torch.hub.load("pytorch/vision:v0.10.0", "resnet18", pretrained=True)
+        case _:
+            raise ValueError(f"{args.model} not supported.")
+    
+    if getattr(args, "model_path", None):
+        model.load_state_dict(torch.load(args.model_path))
+        for param in model.parameters():
+            param.requires_grad_(False)
+            
+    if getattr(args, "parallel", False):
         model = torch.nn.DataParallel(model)
+    
+    model = model.to(device)
+    return model
 
-    return (model, train_loader, test_loader)
-
-
-def get_optimiser(args: Args, net: Net) -> Optimiser:
+def get_optimiser(args: Args, params: List) -> Optimiser:
+    # Default values for optimiser arguments are set to that for training
     match args.optimiser:
         case "Adam":
             args.lr = 0.001 if args.lr < 0 else args.lr
-            return torch.optim.Adam(net.parameters(), lr=args.lr)
+            return torch.optim.Adam(params, lr=args.lr)
         case "SGD":
             args.lr = 0.01 if args.lr < 0 else args.lr
             args.momentum = 0.9 if args.momentum < 0 else args.momentum
-            return torch.optim.SGD(net.parameters(), lr=args.lr, momentum=args.momentum)
+            return torch.optim.SGD(params, lr=args.lr, momentum=args.momentum)
         case "LBFGS":
             args.lr = 1 if args.lr < 0 else args.lr
-            return torch.optim.LBFGS(net.parameters(), lr=args.lr)
+            return torch.optim.LBFGS(params, lr=args.lr)
         case "CurveBall":
             args.lr = 0.01 if args.lr < 0 else args.lr
             args.momentum = 0.9 if args.momentum < 0 else args.momentum
             lambd = 1.0 if args.lambd < 0 else args.lambd
             return CurveBall(
-                net.parameters(),
+                params,
                 lr=args.lr,
                 momentum=args.momentum,
                 lambd=lambd,
@@ -142,3 +161,18 @@ def get_device(args: Args) -> Tuple[bool, Device]:
         device = torch.device("cpu")
 
     return (use_cuda, device)
+
+
+def get_gaussian_noise(args: Args) -> Tensor:
+    match args.dataset: 
+        case "MNIST":
+            return torch.randn(1, 1, 28, 28)
+        case "CIFAR10":
+            return torch.randn(1, 3, 32, 32)
+        case "CIFAR100": 
+            return torch.randn(1, 3, 32, 32)
+        case "ImageNet":
+            return torch.randn(1, 3, 224, 224)
+        case _:
+            raise ValueError(f"Unknown dataset: {args.dataset}")            
+            
