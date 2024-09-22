@@ -25,7 +25,11 @@ def main() -> None:
         log_interval=args.log_interval,
     )
 
-    input_size = (args.batch_size, 1, 28, 28) if args.dataset == "MNIST" else (args.batch_size, 3, 32, 32)
+    input_size = (
+        (args.batch_size, 1, 28, 28)
+        if args.dataset == "MNIST"
+        else (args.batch_size, 3, 32, 32)
+    )
     summary(model, input_size=input_size)
     best_acc = 0.0
 

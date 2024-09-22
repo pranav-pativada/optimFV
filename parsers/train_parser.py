@@ -3,10 +3,11 @@ import os
 from .parser import Parser
 from mytypes import Args
 
+
 class TrainParser(Parser):
     def __init__self():
         super().__init__()
-    
+
     def _get(self) -> Args:
         parser = argparse.ArgumentParser(description="Example training of small models")
         parser.add_argument(
@@ -125,7 +126,7 @@ class TrainParser(Parser):
 
         args = parser.parse_args()
         return args
-    
+
     def _validate_args(self, args: Args) -> None:
         if args.dataset == "MNIST" and args.model == "Basic3C3D":
             raise ValueError("Basic3C3D is not supported for MNIST")

@@ -94,7 +94,7 @@ class Trainer:
             case "CurveBall":
                 (loss, predictions) = self.optimiser.step(model_fn, loss_fn)
             case "LBFGS":
-                
+
                 def closure():
                     self.optimiser.zero_grad()
                     predictions = model_fn()

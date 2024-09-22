@@ -1,22 +1,18 @@
 import torch
 
 from parsers import VisParser
-from utils import (
-    get_device, 
-    get_model, 
-    get_image, 
-    get_optimiser
-)
+from utils import get_device, get_model, get_gaussian_image, get_optimiser
 
 from runner import Visualiser
+
 
 def main():
     args = VisParser().args
     torch.manual_seed(args.seed)
     use_cuda, device = get_device(args)
-    
+
     model = get_model(args, device)
-    image = get_image(args, device)
+    image = get_gaussian_image(args, device)
     optimiser = get_optimiser(args, [image])
     visualiser = Visualiser(
         args=args,

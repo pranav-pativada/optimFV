@@ -18,26 +18,29 @@ def get_data(
 
 
 def get_model(args: Args, device: Device) -> Net:
-    match args.model: 
+    match args.model:
         case "ConvNet":
-            model =  ConvNet()
+            model = ConvNet()
         case "Basic3C3D":
-            model =  Basic3C3D()
+            model = Basic3C3D()
         case "ResNet":
-            model = torch.hub.load("pytorch/vision:v0.10.0", "resnet18", pretrained=True)
+            model = torch.hub.load(
+                "pytorch/vision:v0.10.0", "resnet18", pretrained=True
+            )
         case _:
             raise ValueError(f"{args.model} not supported.")
-    
+
     if getattr(args, "model_path", None):
         model.load_state_dict(torch.load(args.model_path))
         for param in model.parameters():
             param.requires_grad_(False)
-            
+
     if getattr(args, "parallel", False):
         model = torch.nn.DataParallel(model)
-    
+
     model = model.to(device)
     return model
+
 
 def get_optimiser(args: Args, params: List) -> Optimiser:
     # Default values for optimiser arguments are set to that for training
@@ -163,16 +166,15 @@ def get_device(args: Args) -> Tuple[bool, Device]:
     return (use_cuda, device)
 
 
-def get_gaussian_noise(args: Args) -> Tensor:
-    match args.dataset: 
+def get_gaussian_image(args: Args) -> Tensor:
+    match args.dataset:
         case "MNIST":
             return torch.randn(1, 1, 28, 28)
         case "CIFAR10":
             return torch.randn(1, 3, 32, 32)
-        case "CIFAR100": 
+        case "CIFAR100":
             return torch.randn(1, 3, 32, 32)
         case "ImageNet":
             return torch.randn(1, 3, 224, 224)
         case _:
-            raise ValueError(f"Unknown dataset: {args.dataset}")            
-            
+            raise ValueError(f"Unknown dataset: {args.dataset}")
