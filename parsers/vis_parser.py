@@ -11,9 +11,8 @@ class VisParser(Parser):
     def _get(self) -> Args:
         parser = argparse.ArgumentParser(description="Activation Maximisation")
         parser.add_argument(
-            "--i",
             "--interactive",
-            action="store_true",
+            type=bool,
             default=False,
             help="enable interactive mode",
         )
@@ -23,6 +22,40 @@ class VisParser(Parser):
             default=None,
             metavar="PATH",
             help="path to the config file",
+        )
+        parser.add_argument(
+            "--optim-train", 
+            type=str, 
+            default="Adam",
+            help="optimiser that the model was trained on",
+        )
+        parser.add_argument(
+            "--optimiser",
+            type=str,
+            default="Adam",
+            choices=["Adam", "SGD", "LBFGS", "CurveBall"],
+            help="optimiser to use",
+        )
+        parser.add_argument(
+            "--lr",
+            type=float,
+            default=-1,
+            metavar="LR",
+            help="learning rate (default: 0.01 for SGD, 0.001 for Adam, 1 for LBFGS and CurveBall)",
+        )
+        parser.add_argument(
+            "--momentum",
+            type=float,
+            default=-1,
+            metavar="M",
+            help="momentum (default: 0.9 for SGD and CurveBall)",
+        )
+        parser.add_argument("--lambd", type=float, default=1.0, help="lambda")
+        parser.add_argument(
+            "--no-auto-lambda",
+            action="store_true",
+            default=False,
+            help="disables automatic lambda estimation",
         )
         parser.add_argument(
             "--model",
@@ -73,7 +106,7 @@ class VisParser(Parser):
         parser.add_argument(
             "--vis-dir",
             type=str,
-            default="vis",
+            default=None,
             metavar="DIR",
             help="directory to save visualisations",
         )
@@ -92,11 +125,18 @@ class VisParser(Parser):
             help="channel index to visualise in the layer",
         )
         parser.add_argument(
-            "--layer-name",
+            "--layer",
             type=str,
             default=None,
             metavar="NAME",
             help="layer name to visualise",
+        )
+        parser.add_argument(
+            "--log-interval",
+            type=int,
+            default=100,
+            metavar="N",
+            help="optimisation logging interval",
         )
         args = parser.parse_args()
         return args
@@ -104,18 +144,18 @@ class VisParser(Parser):
     def _validate_args(self, args: Args) -> None:
         if args.dataset == "MNIST" and args.model != "ConvNet":
             raise ValueError("MNIST only supported for ConvNet")
-        elif args.dataset.startswith("CIFAR") and args.model == "Basic3C3D":
+        elif args.dataset.startswith("CIFAR") and args.model != "Basic3C3D":
             raise ValueError("CIFAR only supported for 3C3D")
         elif args.dataset == "ImageNet" and args.model != "ResNet":
             raise ValueError("ImageNet only supported for ResNet")
-
-        if not args.layer_name:
-            raise ValueError("Please specify the layer name to visualise")
 
         if (args.use_hub and args.model_path) or (
             not args.use_hub and not args.model_path
         ):
             raise ValueError("Please specify either model path or use hub")
+
+        if not args.vis_dir:
+            args.vis_dir = os.path.join("vis", args.dataset, args.optim_train)
 
         if not os.path.exists(args.vis_dir):
             os.makedirs(args.vis_dir)

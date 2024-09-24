@@ -9,6 +9,7 @@ from torchvision.transforms import (
 )
 from torchinfo import summary
 from tqdm import tqdm
+from typing import Callable, Tuple
 
 
 class Visualiser:
@@ -18,18 +19,20 @@ class Visualiser:
         model: Net,
         optimiser: Optimiser,
         device: Device,
-        log,
         use_transforms: bool = True,
     ):
         self.model = model
         self.optimiser = optimiser
         self.device = device
         self.iters = args.iters
-        self.interactive = args.interactive
         self.layer = args.layer
         self.channel_idx = args.channel_idx
         self.vis_dir = args.vis_dir
+        self.use_transforms = use_transforms
+        self.log_interval = args.log_interval
+
         self.activations = {}
+        self.interactive = getattr(args, "interactive", False)
 
         def loss_fn(layer_name: str, channel_idx: int) -> Tensor:
             return -self.activations[layer_name][0, channel_idx].mean()
@@ -54,10 +57,12 @@ class Visualiser:
                 print(f"{layers[idx]}: {layer_info.num_params} trainable params")
 
             self.layer = input("\nEnter layer name to visualise: ")
-            self.channel_idx = int(input("\nEnter channel index to maximise: "))
+            self.channel_idx = int(input("Enter channel index to maximise: "))
 
         if self.layer is None or self.layer not in layers:
             raise ValueError(f"Layer {self.layer} not found in model")
+
+        return 
 
     def activation_maximise(self, image: Tensor) -> Tensor:
         layer = getattr(self.model, self.layer)
@@ -73,17 +78,32 @@ class Visualiser:
 
         for i in tqdm(range(self.iters), desc="Optimising Image", unit="step"):
             transformed_image = self.transforms(image) if self.use_transforms else image
+            model_fn = lambda: self.model(transformed_image)
+            match self.optimiser.__class__.__name__:
+                case "CurveBall":
+                    loss, _ = self.optimiser.step(model_fn, loss_fn)
+                case "LBFGS":
 
-            self.optimizer.zero_grad()
-            self.model(transformed_image)
-            loss = loss_fn()
-            loss.backward()
-            self.optimizer.step()
+                    def closure():
+                        self.optimiser.zero_grad()
+                        model_fn()
+                        loss = loss_fn()
+                        loss.backward()
+                        return loss
+                    
+                    loss = self.optimiser.step(closure)
+                    model_fn()
+                case _:
+                    self.optimiser.zero_grad()
+                    model_fn()
+                    loss = loss_fn()
+                    loss.backward()
+                    self.optimiser.step()
 
         handle.remove()
         return image
 
-    def visualise(self, image: Tensor) -> None:
+    def visualise(self, image: Tensor, show_bar: bool=False) -> None:
         model_name = self.model.__class__.__name__
         print(
             f"Visualising Layer {self.layer} in model {model_name} @ channel {self.channel_idx}"
@@ -92,10 +112,11 @@ class Visualiser:
         img = image.detach().cpu().squeeze(dim=0).permute(1, 2, 0)
         img = torch.clamp(img, 0, 1)
         img = plt.imshow(img, cmap="viridis")
-        plt.colorbar(img)
+        if show_bar:
+            plt.colorbar(img)
         plt.axis("off")
 
-        plt.savefig(f"{self.vis_dir}/{model_name}_{self.layer}_{self.channel_idx}.png")
+        plt.savefig(f"{self.vis_dir}/{self.layer}_{self.channel_idx}.png")
 
     def set_transforms(self, image_size: int) -> None:
         if self.use_transforms:

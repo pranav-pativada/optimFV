@@ -32,7 +32,9 @@ def get_model(args: Args, device: Device) -> Net:
             raise ValueError(f"{args.model} not supported.")
 
     if getattr(args, "model_path", None):
-        model.load_state_dict(torch.load(args.model_path))
+        checkpoint = torch.load(args.model_path)
+        model.load_state_dict(checkpoint['model'])
+        print(f"Loaded model from {args.model_path} with accuracy @")
         for param in model.parameters():
             param.requires_grad_(False)
 
@@ -171,9 +173,7 @@ def get_gaussian_image(args: Args) -> Tensor:
     match args.dataset:
         case "MNIST":
             return torch.randn(1, 1, 28, 28)
-        case "CIFAR10":
-            return torch.randn(1, 3, 32, 32)
-        case "CIFAR100":
+        case "CIFAR10" | "CIFAR100":
             return torch.randn(1, 3, 32, 32)
         case "ImageNet":
             return torch.randn(1, 3, 224, 224)
