@@ -2,6 +2,3 @@ model: ConvNet
 dataset: MNIST
 optimiser: SGD 
 epochs: 10
-log_interval: 100
-save_model: True
-save_interval: 10

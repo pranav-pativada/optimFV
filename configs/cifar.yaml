@@ -2,6 +2,3 @@ model: Basic3C3D
 dataset: CIFAR10
 optimiser: SGD
 epochs: 10
-batch-size: 64
-save-model: True
-save-interval: 10
