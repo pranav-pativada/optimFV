@@ -48,6 +48,9 @@ def get_model(args: Args, device: Device) -> Net:
 def get_optimiser(args: Args, params: List) -> Optimiser:
     # Default values for optimiser arguments are set to that for training
     match args.optimiser:
+        case "AdaGrad": 
+            args.lr = 0.01 if args.lr < 0 else args.lr
+            return torch.optim.Adagrad(params, lr=args.lr)
         case "Adam":
             args.lr = 0.001 if args.lr < 0 else args.lr
             return torch.optim.Adam(params, lr=args.lr)

@@ -42,7 +42,7 @@ class CurveBall(Optimizer):
         )
         super().__init__(params, defaults)
 
-    def step(self, model_fn, loss_fn):
+    def step(self, model_fn, loss_fn, has_params=True):
         """Performs a single optimization step"""
 
         # only support one parameter group
@@ -77,7 +77,7 @@ class CurveBall(Optimizer):
         ):
             self.zero_grad()
             predictions = model_fn()
-            loss = loss_fn(predictions)
+            loss = loss_fn(predictions) if has_params else loss_fn()
             loss.backward()
 
             for p in parameters:
@@ -99,7 +99,7 @@ class CurveBall(Optimizer):
         # run forward pass, cutting off gradient propagation between model and loss function for efficiency
         predictions = model_fn()
         predictions_d = predictions.detach().requires_grad_(True)
-        loss = loss_fn(predictions_d)
+        loss = loss_fn(predictions_d) if has_params else loss_fn()
 
         # compute J^T * z using FMAD (where z are the state variables)
         (Jz,) = fmad(predictions, parameters, zs)  # equivalent but slower
@@ -179,7 +179,7 @@ class CurveBall(Optimizer):
             if global_state["count"] % group["lambda_interval"] == 0:
                 with t.no_grad():
                     # evaluate the loss with the updated parameters
-                    new_loss = loss_fn(model_fn())
+                    new_loss = loss_fn(model_fn()) if has_params else loss_fn()
 
                     # objective function change predicted by quadratic fit
                     quadratic_change = -0.5 * (auto_params * b).sum()

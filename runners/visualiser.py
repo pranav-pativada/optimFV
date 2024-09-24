@@ -9,7 +9,6 @@ from torchvision.transforms import (
 )
 from torchinfo import summary
 from tqdm import tqdm
-from typing import Callable, Tuple
 
 
 class Visualiser:
@@ -81,14 +80,14 @@ class Visualiser:
             model_fn = lambda: self.model(transformed_image)
             match self.optimiser.__class__.__name__:
                 case "CurveBall":
-                    loss, _ = self.optimiser.step(model_fn, loss_fn)
+                    loss, _ = self.optimiser.step(model_fn, loss_fn, has_params=False)
                 case "LBFGS":
 
                     def closure():
                         self.optimiser.zero_grad()
                         model_fn()
                         loss = loss_fn()
-                        loss.backward()
+                        loss.backward(retain_graph=True)
                         return loss
                     
                     loss = self.optimiser.step(closure)

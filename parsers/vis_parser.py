@@ -33,7 +33,7 @@ class VisParser(Parser):
             "--optimiser",
             type=str,
             default="Adam",
-            choices=["Adam", "SGD", "LBFGS", "CurveBall"],
+            choices=["Adam", "SGD", "AdaGrad", "LBFGS"],
             help="optimiser to use",
         )
         parser.add_argument(
@@ -154,8 +154,13 @@ class VisParser(Parser):
         ):
             raise ValueError("Please specify either model path or use hub")
 
-        if not args.vis_dir:
+        if args.model_path and not args.vis_dir:
             args.vis_dir = os.path.join("vis", args.dataset, args.optim_train)
+        elif args.use_hub and not args.vis_dir:
+            if args.optimiser == "SGD" and args.momentum == 0: 
+                args.vis_dir = os.path.join("vis", args.dataset, args.optimiser, "no_momentum")
+            else: 
+                args.vis_dir = os.path.join("vis", args.dataset, args.optimiser)
 
         if not os.path.exists(args.vis_dir):
             os.makedirs(args.vis_dir)

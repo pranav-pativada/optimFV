@@ -93,7 +93,7 @@ class Trainer:
     def optimise(self, model_fn: Callable, loss_fn: Callable) -> Tuple[Tensor, Tensor]:
         match self.optimiser.__class__.__name__:
             case "CurveBall":
-                (loss, predictions) = self.optimiser.step(model_fn, loss_fn)
+                (loss, predictions) = self.optimiser.step(model_fn, loss_fn, has_params=True)
             case "LBFGS":
 
                 def closure():

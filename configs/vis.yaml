@@ -4,5 +4,5 @@ optimiser: Adam
 lr: 0.01
 iters: 2048
 channel-idx: 40
-layer: fc2
-interactive: True
+use-hub: True
+layer: fc
