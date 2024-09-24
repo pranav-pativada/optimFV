@@ -1,19 +1,19 @@
 import torch
 import torch.nn.functional as F
 from torchinfo import summary
-from parser import Parser
-from trainer import Trainer
+from parsers import TrainParser
+from runners import Trainer
 from utils import get_device, get_model, get_data, get_optimiser
 
 
 def main() -> None:
-    args = Parser().args
+    args = TrainParser().args
 
     torch.manual_seed(args.seed)
     use_cuda, device = get_device(args)
 
     model = get_model(args, device)
-    train_loader, test_loader = get_data(args, use_cuda, device)
+    train_loader, test_loader = get_data(args, use_cuda)
     optimiser = get_optimiser(args, model.parameters())
     trainer = Trainer(
         model=model,
@@ -32,7 +32,6 @@ def main() -> None:
     )
     summary(model, input_size=input_size)
     best_acc = 0.0
-
     for epoch in range(1, args.epochs + 1):
         trainer.train(epoch)
         trainer.test(epoch)

@@ -6,9 +6,7 @@ from models import ConvNet, Basic3C3D
 from optimisers import CurveBall
 
 
-def get_data(
-    args: Args, use_cuda: bool, device: Device
-) -> Tuple[Net, DataLoader, DataLoader]:
+def get_data(args: Args, use_cuda: bool) -> Tuple[Net, DataLoader, DataLoader]:
     if args.dataset == "MNIST":
         train_loader, test_loader = get_mnist(args, use_cuda)
     else:
@@ -22,7 +20,10 @@ def get_model(args: Args, device: Device) -> Net:
         case "ConvNet":
             model = ConvNet()
         case "Basic3C3D":
-            model = Basic3C3D()
+            if args.dataset == "CIFAR10":
+                model = Basic3C3D(num_classes=10)
+            else:
+                model = Basic3C3D(num_classes=100)
         case "ResNet":
             model = torch.hub.load(
                 "pytorch/vision:v0.10.0", "resnet18", pretrained=True

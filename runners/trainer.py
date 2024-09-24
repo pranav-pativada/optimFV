@@ -1,6 +1,6 @@
 import torch
 from tqdm import tqdm
-from typing import Tuple
+from typing import Callable, Tuple
 from mytypes import Tensor, DataLoader, Device, Loss, Net, Optimiser
 
 
@@ -67,7 +67,8 @@ class Trainer:
         self.accuracies = []
         with torch.no_grad():
             for batch_idx, (data, target) in enumerate(tqdm(self.test_loader)):
-                data, target = data.to(self.device), target.to(self.device)
+                data = data.to(self.device)
+                target = target.to(self.device)
                 predictions = self.model(data)
 
                 loss = self.loss_fn(predictions, target)
@@ -89,7 +90,7 @@ class Trainer:
                     )
                 )
 
-    def optimise(self, model_fn, loss_fn) -> Tuple[Tensor, Tensor]:
+    def optimise(self, model_fn: Callable, loss_fn: Callable) -> Tuple[Tensor, Tensor]:
         match self.optimiser.__class__.__name__:
             case "CurveBall":
                 (loss, predictions) = self.optimiser.step(model_fn, loss_fn)

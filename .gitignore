@@ -15,6 +15,3 @@ experiments/
 
 # Python cache
 **/__pycache__/
-
-# Checkpoints
-checkpoints/

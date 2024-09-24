@@ -3,7 +3,7 @@ import torch
 from parsers import VisParser
 from utils import get_device, get_model, get_gaussian_image, get_optimiser
 
-from runner import Visualiser
+from runners import Visualiser
 
 
 def main():

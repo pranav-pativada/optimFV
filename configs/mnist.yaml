@@ -1,9 +1,7 @@
 model: ConvNet
 dataset: MNIST
-optimiser: L-BFGS 
+optimiser: SGD 
 epochs: 10
-lr: 0.01
-momentum: 0.9
 log_interval: 100
 save_model: True
 save_interval: 10
